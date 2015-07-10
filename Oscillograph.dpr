@@ -10,7 +10,8 @@ uses
   apiPlugin,
   OscillographPlugin in 'OscillographPlugin.pas',
   OscillographGDIP in 'OscillographGDIP.pas',
-  OscillographSettings in 'OscillographSettings.pas';
+  OscillographSettings in 'OscillographSettings.pas',
+  OscillographOptionsFrame in 'OscillographOptionsFrame.pas' {Form1};
 
 {$IFNDEF DEBUG}
   {$SetPEFlags IMAGE_FILE_DEBUG_STRIPPED}
