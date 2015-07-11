@@ -3,7 +3,7 @@
         <ProjectGuid>{434C7A87-DC18-4A42-A44F-FF963B8B507D}</ProjectGuid>
         <MainSource>Oscillograph.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Library</AppType>
         <FrameworkType>None</FrameworkType>
@@ -95,7 +95,7 @@
         <DCCReference Include="OscillographGDIP.pas"/>
         <DCCReference Include="OscillographSettings.pas"/>
         <DCCReference Include="OscillographOptionsFrame.pas">
-            <Form>Form1</Form>
+            <Form>OOptionsFrame</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <None Include="Oscillograph.todo"/>
@@ -473,9 +473,9 @@
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
             </Deployment>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>

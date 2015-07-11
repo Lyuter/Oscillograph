@@ -11,7 +11,7 @@ uses
   OscillographPlugin in 'OscillographPlugin.pas',
   OscillographGDIP in 'OscillographGDIP.pas',
   OscillographSettings in 'OscillographSettings.pas',
-  OscillographOptionsFrame in 'OscillographOptionsFrame.pas' {Form1};
+  OscillographOptionsFrame in 'OscillographOptionsFrame.pas' {OOptionsFrame};
 
 {$IFNDEF DEBUG}
   {$SetPEFlags IMAGE_FILE_DEBUG_STRIPPED}

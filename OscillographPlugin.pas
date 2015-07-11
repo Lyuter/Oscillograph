@@ -13,9 +13,11 @@ interface
 uses  Windows, SysUtils,
       OscillographGDIP,
       OscillographSettings,
+      OscillographOptionsFrame,
       AIMPCustomPlugin,
       apiWrappers, apiVisuals, apiCore,
-      apiObjects, apiPlugin, apiMessages;
+      apiObjects, apiPlugin, apiMessages,
+      apiOptions;
 
 const
     PLUGIN_NAME              = 'Oscillograph';
@@ -26,13 +28,6 @@ const
     OSCILLOGRAPH_CAPTION     = 'AIMP Oscillograph';
 
 type
-
-  TOMessageHook = class(TInterfacedObject, IAIMPMessageHook)
-  public
-    procedure CoreMessage(Message: DWORD; Param1: Integer; Param2: Pointer;
-                                                  var Result: HRESULT); stdcall;
-  end;
-
   TOVisualization = class(TInterfacedObject, IAIMPExtensionEmbeddedVisualization)
     function GetFlags: Integer; stdcall;
     function GetMaxDisplaySize(out Width, Height: Integer): HRESULT; stdcall;
@@ -44,6 +39,16 @@ type
     procedure Resize(NewWidth, NewHeight: Integer); stdcall;
   private
     ODrawer: IOscillographDrawer;
+  end;
+
+  TOOptionsDialogFrame = class(TInterfacedObject, IAIMPOptionsDialogFrame)
+  private
+    OOptionsFrame: TOOptionsFrame;
+  protected
+    function GetName(out S: IAIMPString): HRESULT; stdcall;
+    function CreateFrame(ParentWnd: HWND): HWND; stdcall;
+    procedure DestroyFrame; stdcall;
+    procedure Notification(ID: Integer); stdcall;
   end;
 
   TOPlugin = class(TAIMPCustomPlugin)
@@ -99,52 +104,20 @@ begin
   if Succeeded(Result)
   then
     Result := Core.RegisterExtension(IID_IAIMPServiceVisualizations, TOVisualization.Create);
-
   if Succeeded(Result)
   then
-    begin
-      try
-        OMessageHook := TOMessageHook.Create;
-        Core.QueryInterface(IID_IAIMPServiceMessageDispatcher, ServiceMessageDispatcher);
-        CheckResult(ServiceMessageDispatcher.Hook(OMessageHook));
-      except
-        Result := E_UNEXPECTED;
-      end;
-    end;
+    Result := Core.RegisterExtension(IID_IAIMPServiceOptionsDialog, TOOptionsDialogFrame.Create);
 end;
 {--------------------------------------------------------------------
 Finalize}
 procedure TOPlugin.Finalize;
-var
-  ServiceMessageDispatcher: IAIMPServiceMessageDispatcher;
 begin
  try
-  // Removing the message hook
-  CheckResult(CoreIntf.QueryInterface(IID_IAIMPServiceMessageDispatcher,
-                                                ServiceMessageDispatcher));
-  CheckResult(ServiceMessageDispatcher.Unhook(OMessageHook));
+  //
  except
   ShowErrorMessage('"Plugin.Finalize" failure!');
  end;
   inherited;
-end;
-
-{=========================================================================)
-                              TMessageHook
-(=========================================================================}
-procedure TOMessageHook.CoreMessage(Message: DWORD; Param1: Integer;
-  Param2: Pointer; var Result: HRESULT);
-begin
-try
-  case Message  of
-    AIMP_MSG_EVENT_LANGUAGE:
-      begin
-       //
-      end;
-  end;
-except
-  ShowErrorMessage('"MessageHook.CoreMessage" failure!');
-end;
 end;
 
 {=========================================================================)
@@ -226,6 +199,50 @@ end;
 procedure TOVisualization.Draw(DC: HDC; Data: PAIMPVisualData);
 begin
   ODrawer.Draw(DC, Data);
+end;
+
+{=========================================================================)
+                             TOOptionsDialogFrame
+(=========================================================================}
+function TOOptionsDialogFrame.CreateFrame(ParentWnd: HWND): HWND;
+var
+  R: Trect;
+begin
+  OOptionsFrame := TOOptionsFrame.CreateParented(ParentWnd);
+//  OOptionsFrame.OnModified := HandlerModified;
+  GetWindowRect(ParentWnd, R);
+  OffsetRect(R, -R.Left, -R.Top);
+  OOptionsFrame.BoundsRect := R;
+  OOptionsFrame.Visible := True;
+  Result := OOptionsFrame.Handle;
+end;
+
+procedure TOOptionsDialogFrame.DestroyFrame;
+begin
+  FreeAndNil(OOptionsFrame);
+end;
+
+function TOOptionsDialogFrame.GetName(out S: IAIMPString): HRESULT;
+begin
+  try
+    S := MakeString(OSCILLOGRAPH_CAPTION);
+    Result := S_OK;
+  except
+    Result := E_UNEXPECTED;
+  end;
+end;
+
+procedure TOOptionsDialogFrame.Notification(ID: Integer);
+begin
+  if OOptionsFrame <> nil then
+    case ID of
+      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_LOCALIZATION: ;
+//        OOptionsFrame.ApplyLocalization;
+      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_LOAD: ;
+//        OOptionsFrame.ConfigLoad;
+      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_SAVE: ;
+//        OOptionsFrame.ConfigSave;
+    end;
 end;
 
 {=========================================================================)

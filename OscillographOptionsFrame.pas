@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 type
-  TForm1 = class(TForm)
+  TOOptionsFrame = class(TForm)
     CheckBox1: TCheckBox;
     GroupBox1: TGroupBox;
     Label4: TLabel;
@@ -31,6 +31,9 @@ type
     Button3: TButton;
     Button4: TButton;
     CheckBox3: TCheckBox;
+    ColorDialog1: TColorDialog;
+    procedure FormPaint(Sender: TObject);
+    procedure Panel4Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -38,10 +41,32 @@ type
   end;
 
 var
-  Form1: TForm1;
+  OOptionsFrame: TOOptionsFrame;
 
 implementation
 
 {$R *.dfm}
+
+procedure TOOptionsFrame.FormPaint(Sender: TObject);
+begin
+  with Self.Canvas
+  do
+    begin
+      Brush.Color := $F0F0F0;
+      DrawFocusRect(Self.ClientRect);
+    end;
+end;
+
+procedure TOOptionsFrame.Panel4Click(Sender: TObject);
+begin
+  ColorDialog1.Color := Panel4.Color;
+  if ColorDialog1.Execute
+  then
+    begin
+      Edit4.Text := Format('#%.02x%.02x%.02x',
+      [GetRValue(ColorDialog1.Color), GetGValue(ColorDialog1.Color), GetBValue(ColorDialog1.Color)]);
+      Panel4.Color := ColorDialog1.Color;
+    end;
+end;
 
 end.
