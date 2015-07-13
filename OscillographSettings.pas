@@ -6,11 +6,16 @@ uses
   Windows, apiVisuals;
 
 const
-
-    OSC_COLOR_DEFAULT           = $FF00FF00;
-    OSC_COLOR_DEFAULT_BACK      = $55002000;
+    PLUGIN_NAME              = 'Oscillograph';
+    PLUGIN_AUTHOR            = 'Author: Lyuter';
+    PLUGIN_SHORT_DESCRIPTION = 'DEV BUILD';
+    PLUGIN_FULL_DESCRIPTION  = '';
+    //
+    OSCILLOGRAPH_CAPTION     = 'AIMP Oscillograph';
+    //
     OSC_COLOR_DEFAULT_LINE      = $FF00ee00;
     OSC_COLOR_DEFAULT_MARK      = $3200aa00;
+    OSC_COLOR_DEFAULT_BACK      = $55002000;
     //
     OSC_CELLSIZE   = 30;    //  Размер сетки в пикселях
     OSC_MARKERSIZE = 6;     //  Расстояние между маркерами
@@ -18,13 +23,11 @@ const
 type
 
   TOSettings = record
-    AntiAlias: Boolean;
-    IsTwoLines: Boolean;
-    CustomColors: Boolean;
-    Color,
-    LineColor,
-    MarkColor,
-    BackColor   : Cardinal;
+    AntiAliasing: Boolean;
+    LineMode: Integer; // 0 - both, 1 - right, 2 - left
+    ColorLine,
+    ColorGrid,
+    ColorBackground   : Cardinal;
   end;
 
   IOscillographDrawer = interface(IUnknown)

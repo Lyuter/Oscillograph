@@ -10,22 +10,15 @@ unit OscillographPlugin;
 
 interface
 
-uses  Windows, SysUtils,
-      OscillographGDIP,
-      OscillographSettings,
-      OscillographOptionsFrame,
-      AIMPCustomPlugin,
-      apiWrappers, apiVisuals, apiCore,
-      apiObjects, apiPlugin, apiMessages,
-      apiOptions;
-
-const
-    PLUGIN_NAME              = 'Oscillograph';
-    PLUGIN_AUTHOR            = 'Author: Lyuter';
-    PLUGIN_SHORT_DESCRIPTION = 'DEV BUILD';
-    PLUGIN_FULL_DESCRIPTION  = '';
-    //
-    OSCILLOGRAPH_CAPTION     = 'AIMP Oscillograph';
+uses
+  Windows, SysUtils, Classes,
+  OscillographGDIP,
+  OscillographSettings,
+  OscillographOptionsFrame,
+  AIMPCustomPlugin,
+  apiWrappers, apiVisuals, apiCore,
+  apiObjects, apiPlugin, apiMessages,
+  apiOptions;
 
 type
   TOVisualization = class(TInterfacedObject, IAIMPExtensionEmbeddedVisualization)
@@ -39,21 +32,28 @@ type
     procedure Resize(NewWidth, NewHeight: Integer); stdcall;
   private
     ODrawer: IOscillographDrawer;
+  public
+    procedure UpdateSettings(NewSettings: TOSettings);
   end;
 
-  TOOptionsDialogFrame = class(TInterfacedObject, IAIMPOptionsDialogFrame)
+  TOOptionsCore = class(TInterfacedObject, IAIMPOptionsDialogFrame)
   private
     OOptionsFrame: TOOptionsFrame;
+    FOnModified: TNotifyEvent;
   protected
     function GetName(out S: IAIMPString): HRESULT; stdcall;
     function CreateFrame(ParentWnd: HWND): HWND; stdcall;
     procedure DestroyFrame; stdcall;
     procedure Notification(ID: Integer); stdcall;
+  public
+    property OnModified: TNotifyEvent read FOnModified write FOnModified;
   end;
 
   TOPlugin = class(TAIMPCustomPlugin)
   private
-    OMessageHook: IAIMPMessageHook;
+    OVisualization: TOVisualization;
+    OOptionsCore: TOOptionsCore;
+    procedure OnSettingsModified(Sender: TObject);
   protected
     function InfoGet(Index: Integer): PWideChar; override; stdcall;
     function InfoGetCategories: Cardinal; override; stdcall;
@@ -94,26 +94,43 @@ function TOPlugin.InfoGetCategories: Cardinal;
 begin
   Result := AIMP_PLUGIN_CATEGORY_VISUALS;
 end;
+
+procedure TOPlugin.OnSettingsModified(Sender: TObject);
+begin
+ try
+  if Sender is TOOptionsFrame
+  then
+    OVisualization.UpdateSettings(TOOptionsFrame(Sender).Settings);
+ except
+  ShowErrorMessage('"SettingsModified" failure!');
+ end;
+end;
 {--------------------------------------------------------------------
 Initialize}
 function TOPlugin.Initialize(Core: IAIMPCore): HRESULT;
-var
-  ServiceMessageDispatcher: IAIMPServiceMessageDispatcher;
 begin
   Result := inherited Initialize(Core);
   if Succeeded(Result)
   then
-    Result := Core.RegisterExtension(IID_IAIMPServiceVisualizations, TOVisualization.Create);
+    begin
+      OVisualization := TOVisualization.Create;
+      Result := Core.RegisterExtension(IID_IAIMPServiceVisualizations, OVisualization);
+    end;
   if Succeeded(Result)
   then
-    Result := Core.RegisterExtension(IID_IAIMPServiceOptionsDialog, TOOptionsDialogFrame.Create);
+    begin
+      OOptionsCore := TOOptionsCore.Create;
+      OOptionsCore.OnModified := OnSettingsModified;
+      Result := Core.RegisterExtension(IID_IAIMPServiceOptionsDialog, OOptionsCore);
+    end;
 end;
 {--------------------------------------------------------------------
 Finalize}
 procedure TOPlugin.Finalize;
 begin
  try
-  //
+//  FreeAndNil(OVisualization);
+//  OOptionsDialogFrame.Free;
  except
   ShowErrorMessage('"Plugin.Finalize" failure!');
  end;
@@ -176,13 +193,11 @@ begin
   ODrawer := TOscillographGDIP.Create;
   with DefaultSettings do
     begin
-      AntiAlias := True;
-      IsTwoLines := True;
-      CustomColors := False;
-      Color := OSC_COLOR_DEFAULT; 
-      LineColor := OSC_COLOR_DEFAULT_LINE; 
-      MarkColor := OSC_COLOR_DEFAULT_MARK;
-      BackColor := OSC_COLOR_DEFAULT_BACK;      
+      AntiAliasing := True;
+      LineMode := 0;
+      ColorLine := OSC_COLOR_DEFAULT_LINE;
+      ColorGrid := OSC_COLOR_DEFAULT_MARK;
+      ColorBackground := OSC_COLOR_DEFAULT_BACK;
     end;    
   ODrawer.Initialize(DefaultSettings, Width, Height);
   Result := S_OK;
@@ -196,6 +211,11 @@ begin
   ODrawer.Resize(NewWidth, NewHeight);
 end;
 
+procedure TOVisualization.UpdateSettings(NewSettings: TOSettings);
+begin
+  ODrawer.UpdateSettings(NewSettings);
+end;
+
 procedure TOVisualization.Draw(DC: HDC; Data: PAIMPVisualData);
 begin
   ODrawer.Draw(DC, Data);
@@ -204,12 +224,12 @@ end;
 {=========================================================================)
                              TOOptionsDialogFrame
 (=========================================================================}
-function TOOptionsDialogFrame.CreateFrame(ParentWnd: HWND): HWND;
+function TOOptionsCore.CreateFrame(ParentWnd: HWND): HWND;
 var
   R: Trect;
 begin
   OOptionsFrame := TOOptionsFrame.CreateParented(ParentWnd);
-//  OOptionsFrame.OnModified := HandlerModified;
+  OOptionsFrame.OnModified := OnModified;
   GetWindowRect(ParentWnd, R);
   OffsetRect(R, -R.Left, -R.Top);
   OOptionsFrame.BoundsRect := R;
@@ -217,12 +237,12 @@ begin
   Result := OOptionsFrame.Handle;
 end;
 
-procedure TOOptionsDialogFrame.DestroyFrame;
+procedure TOOptionsCore.DestroyFrame;
 begin
   FreeAndNil(OOptionsFrame);
 end;
 
-function TOOptionsDialogFrame.GetName(out S: IAIMPString): HRESULT;
+function TOOptionsCore.GetName(out S: IAIMPString): HRESULT;
 begin
   try
     S := MakeString(OSCILLOGRAPH_CAPTION);
@@ -232,7 +252,7 @@ begin
   end;
 end;
 
-procedure TOOptionsDialogFrame.Notification(ID: Integer);
+procedure TOOptionsCore.Notification(ID: Integer);
 begin
   if OOptionsFrame <> nil then
     case ID of

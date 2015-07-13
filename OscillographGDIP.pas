@@ -1,6 +1,7 @@
 unit OscillographGDIP;
 
 interface
+
 uses
   Windows, SysUtils, apiVisuals, GdiPlus, VCL.Graphics, Math,
   OscillographSettings;
@@ -36,14 +37,21 @@ type
 implementation
 
 {--------------------------------------------------------------------}
+function  RGBToARGB(RGBColor: Cardinal): Cardinal;
+begin
+  Result := (RGBColor and $00FF0000) shr 16 +
+            (RGBColor and $0000FF00) +
+            (RGBColor and $000000FF) shl 16;
+end;
+{--------------------------------------------------------------------}
 function TOscillographGDIP.Initialize(Settings: TOSettings; Width, Height: Integer): HRESULT;
 begin
   inherited;
  try
   Result := S_OK;
   FSettings := Settings;
-  FBrush := TGPSolidBrush.Create(Settings.BackColor);
-  FPen := TGPPen.Create(Settings.BackColor);
+  FBrush := TGPSolidBrush.Create(Settings.ColorBackground);
+  FPen := TGPPen.Create(Settings.ColorBackground);
   FClientRect.Top := 0;
   FClientRect.Left := 0;
   FClientRect.Right := Width;
@@ -81,6 +89,10 @@ end;
 procedure TOscillographGDIP.UpdateSettings(NewSettings: TOSettings);
 begin
   FSettings := NewSettings;
+  FSettings.ColorLine := RGBToARGB(NewSettings.ColorLine) or $FF000000;
+  FSettings.ColorGrid := RGBToARGB(NewSettings.ColorGrid) or $32000000;
+  FSettings.ColorBackground := RGBToARGB( NewSettings.ColorBackground) or $55000000;
+  MakeGrid;
 end;
 {--------------------------------------------------------------------}
 procedure TOscillographGDIP.Click(X, Y, Button: Integer);
@@ -109,9 +121,9 @@ begin
     end;
 
   // Рисуем лучи
-  FBrush.SetColor(FSettings.BackColor);
+  FBrush.SetColor(FSettings.ColorBackground);
   FLinesDrawer.FillRectangle(FBrush, 0, 0, FClientRect.Right, FClientRect.Bottom); // Очищаем
-  FPen.SetColor(FSettings.LineColor);
+  FPen.SetColor(FSettings.ColorLine);
 
   if  (Data.Peaks[0] <> 0)
     and (Data.Peaks[1] <> 0)
@@ -144,7 +156,7 @@ begin
     end;
 
   // Очищаем буфер сборки
-  FAssemblyDrawer.Clear(FSettings.BackColor);
+  FAssemblyDrawer.Clear(FSettings.ColorBackground);
   // Выводим буфер лучей
   FAssemblyDrawer.DrawImage(FLinesBufer, 0, 0, 0, 0,
                         FClientRect.Right, FClientRect.Bottom, UnitPixel);
@@ -169,7 +181,7 @@ begin
   FLinesBufer := TGPBitmap.Create(NewWidth, NewHeight, FPrimaryDrawer);
   FLinesDrawer := TGPGraphics.Create(FLinesBufer);
   FLinesDrawer.SetCompositingQuality(CompositingQualityHighSpeed);
-  if  FSettings.AntiAlias
+  if  FSettings.AntiAliasing
   then
     FLinesDrawer.SetSmoothingMode(SmoothingModeAntiAlias)
   else
@@ -204,7 +216,7 @@ begin
   NewWidth := FClientRect.Right;
 
   FGridDrawer.Clear($00000000);
-  FPen.SetColor(FSettings.MarkColor);
+  FPen.SetColor(FSettings.ColorGrid);
 
   for i := 0 to Round(Max(FClientRect.Bottom, FClientRect.Right)/2/OSC_CELLSIZE)
   do

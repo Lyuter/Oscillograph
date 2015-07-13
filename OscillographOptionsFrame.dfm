@@ -14,13 +14,14 @@ object OOptionsFrame: TOOptionsFrame
   OnPaint = FormPaint
   PixelsPerInch = 96
   TextHeight = 13
-  object CheckBox1: TCheckBox
+  object CheckBoxAntiAliasing: TCheckBox
     Left = 312
     Top = 224
     Width = 151
     Height = 17
     Caption = #1057#1075#1083#1072#1078#1080#1074#1072#1085#1080#1077
     TabOrder = 0
+    OnClick = CheckBoxAntiAliasingClick
   end
   object GroupBox1: TGroupBox
     Left = 8
@@ -32,147 +33,120 @@ object OOptionsFrame: TOOptionsFrame
     DesignSize = (
       455
       194)
-    object Label4: TLabel
-      Left = 30
-      Top = 33
-      Width = 30
-      Height = 13
-      Alignment = taRightJustify
-      BiDiMode = bdLeftToRight
-      Caption = #1062#1074#1077#1090':'
-      ParentBiDiMode = False
-    end
-    object PaintBox1: TPaintBox
-      Left = 200
+    object PaintBoxColorPicker: TPaintBox
+      Left = 193
       Top = 14
-      Width = 245
+      Width = 252
       Height = 170
+      Cursor = crCross
       Anchors = [akLeft, akTop, akRight, akBottom]
       Color = clLime
       ParentColor = False
-      OnMouseDown = PaintBox1MouseDown
-      OnMouseMove = PaintBox1MouseMove
-      OnPaint = PaintBox1Paint
+      OnMouseDown = PaintBoxColorPickerMouseDown
+      OnMouseMove = PaintBoxColorPickerMouseMove
+      OnPaint = PaintBoxColorPickerPaint
     end
-    object Edit4: TEdit
-      Left = 70
-      Top = 30
-      Width = 57
-      Height = 21
-      TabOrder = 0
-      Text = '#094093'
+    object LabelLine: TLabel
+      Left = 28
+      Top = 34
+      Width = 46
+      Height = 13
+      Alignment = taRightJustify
+      BiDiMode = bdLeftToRight
+      Caption = #1051#1080#1085#1080#1103': #'
+      ParentBiDiMode = False
     end
-    object Panel4: TPanel
-      Left = 132
-      Top = 30
+    object LabelGrid: TLabel
+      Left = 28
+      Top = 62
+      Width = 46
+      Height = 13
+      Alignment = taRightJustify
+      BiDiMode = bdLeftToRight
+      Caption = #1057#1077#1090#1082#1072': #'
+      ParentBiDiMode = False
+    end
+    object LabelBackground: TLabel
+      Left = 39
+      Top = 89
+      Width = 35
+      Height = 13
+      Alignment = taRightJustify
+      Caption = #1060#1086#1085': #'
+    end
+    object PaintBoxLine: TPaintBox
+      Left = 136
+      Top = 31
       Width = 49
       Height = 21
-      BevelOuter = bvLowered
-      Caption = 'Panel4'
-      Color = 8388863
-      ParentBackground = False
-      TabOrder = 1
-      OnClick = Panel4Click
+      Cursor = crHandPoint
+      OnClick = ColorBoxClick
+      OnPaint = ColorBoxPaint
     end
-    object GroupBox2: TGroupBox
-      Left = 9
-      Top = 68
-      Width = 185
-      Height = 116
-      Caption = #1056#1072#1089#1096#1080#1088#1077#1085#1085#1072#1103' '#1085#1072#1089#1090#1088#1086#1081#1082#1072
+    object PaintBoxGrid: TPaintBox
+      Left = 136
+      Top = 58
+      Width = 49
+      Height = 21
+      Cursor = crHandPoint
+      OnClick = ColorBoxClick
+      OnPaint = ColorBoxPaint
+    end
+    object PaintBoxBackground: TPaintBox
+      Left = 136
+      Top = 85
+      Width = 49
+      Height = 21
+      Cursor = crHandPoint
+      OnClick = ColorBoxClick
+      OnPaint = ColorBoxPaint
+    end
+    object EditLine: TEdit
+      Left = 79
+      Top = 31
+      Width = 50
+      Height = 21
+      TabOrder = 0
+      Text = '094093'
+      OnChange = ColorEditChange
+      OnEnter = ColorEditEnter
+      OnExit = ColorEditExit
+    end
+    object EditGrid: TEdit
+      Left = 79
+      Top = 58
+      Width = 50
+      Height = 21
+      TabOrder = 1
+      Text = '094093'
+      OnChange = ColorEditChange
+      OnEnter = ColorEditEnter
+      OnExit = ColorEditExit
+    end
+    object EditBackground: TEdit
+      Left = 79
+      Top = 85
+      Width = 50
+      Height = 21
       TabOrder = 2
-      object Label1: TLabel
-        Left = 16
-        Top = 26
-        Width = 35
-        Height = 13
-        Alignment = taRightJustify
-        BiDiMode = bdLeftToRight
-        Caption = #1051#1080#1085#1080#1103':'
-        ParentBiDiMode = False
-      end
-      object Label2: TLabel
-        Left = 16
-        Top = 54
-        Width = 35
-        Height = 13
-        Alignment = taRightJustify
-        BiDiMode = bdLeftToRight
-        Caption = #1057#1077#1090#1082#1072':'
-        ParentBiDiMode = False
-      end
-      object Label3: TLabel
-        Left = 27
-        Top = 81
-        Width = 24
-        Height = 13
-        Alignment = taRightJustify
-        BiDiMode = bdLeftToRight
-        Caption = #1060#1086#1085':'
-        ParentBiDiMode = False
-      end
-      object Edit3: TEdit
-        Left = 61
-        Top = 77
-        Width = 57
-        Height = 21
-        TabOrder = 0
-        Text = '#094093'
-      end
-      object Edit2: TEdit
-        Left = 61
-        Top = 50
-        Width = 57
-        Height = 21
-        TabOrder = 1
-        Text = '#094093'
-      end
-      object Edit1: TEdit
-        Left = 61
-        Top = 23
-        Width = 57
-        Height = 21
-        TabOrder = 2
-        Text = '#094093'
-      end
-      object Panel1: TPanel
-        Left = 123
-        Top = 23
-        Width = 49
-        Height = 21
-        BevelOuter = bvLowered
-        Caption = 'Panel1'
-        Color = clLime
-        ParentBackground = False
-        TabOrder = 3
-      end
-      object Panel2: TPanel
-        Left = 124
-        Top = 50
-        Width = 49
-        Height = 21
-        BevelOuter = bvLowered
-        Caption = 'Panel2'
-        Color = clYellow
-        ParentBackground = False
-        TabOrder = 4
-      end
-      object Panel3: TPanel
-        Left = 123
-        Top = 77
-        Width = 49
-        Height = 21
-        BevelOuter = bvNone
-        Caption = 'Panel3'
-        Color = clGray
-        ParentBackground = False
-        TabOrder = 5
-      end
+      Text = '094093'
+      OnChange = ColorEditChange
+      OnEnter = ColorEditEnter
+      OnExit = ColorEditExit
+    end
+    object CheckBoxFastConfig: TCheckBox
+      Left = 28
+      Top = 144
+      Width = 157
+      Height = 17
+      Caption = #1041#1099#1089#1090#1088#1072#1103' '#1085#1072#1089#1090#1088#1086#1081#1082#1072
+      TabOrder = 3
+      OnMouseUp = CheckBoxFastConfigMouseUp
     end
   end
-  object CheckBox2: TCheckBox
+  object CheckBoxGrid: TCheckBox
     Left = 312
-    Top = 260
+    Top = 254
     Width = 151
     Height = 17
     Caption = #1054#1090#1086#1073#1088#1072#1078#1072#1090#1100' '#1089#1077#1090#1082#1091
@@ -195,7 +169,7 @@ object OOptionsFrame: TOOptionsFrame
     end
     object Button2: TButton
       Left = 14
-      Top = 17
+      Top = 27
       Width = 113
       Height = 25
       Caption = #1044#1086#1073#1072#1074#1080#1090#1100
@@ -203,7 +177,7 @@ object OOptionsFrame: TOOptionsFrame
     end
     object Button3: TButton
       Left = 14
-      Top = 48
+      Top = 58
       Width = 113
       Height = 25
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
@@ -211,7 +185,7 @@ object OOptionsFrame: TOOptionsFrame
     end
     object Button4: TButton
       Left = 14
-      Top = 79
+      Top = 89
       Width = 113
       Height = 25
       Caption = #1059#1076#1072#1083#1080#1090#1100
@@ -226,18 +200,47 @@ object OOptionsFrame: TOOptionsFrame
       TabOrder = 4
       WordWrap = True
     end
+    object Button1: TButton
+      Left = 14
+      Top = 120
+      Width = 113
+      Height = 25
+      Caption = #1053#1086#1074#1099#1081
+      TabOrder = 5
+    end
   end
-  object Button1: TButton
-    Left = 22
-    Top = 318
-    Width = 113
-    Height = 25
-    Caption = #1053#1086#1074#1099#1081
+  object RadioGroup1: TRadioGroup
+    Left = 303
+    Top = 287
+    Width = 160
+    Height = 98
+    Caption = #1050#1072#1085#1072#1083#1099
     TabOrder = 4
   end
-  object ColorDialog1: TColorDialog
-    Options = [cdFullOpen]
-    Left = 328
-    Top = 349
+  object RadioButton1: TRadioButton
+    Left = 325
+    Top = 310
+    Width = 113
+    Height = 17
+    Caption = #1054#1073#1072
+    Checked = True
+    TabOrder = 5
+    TabStop = True
+  end
+  object RadioButton2: TRadioButton
+    Left = 325
+    Top = 333
+    Width = 113
+    Height = 17
+    Caption = #1051#1077#1074#1099#1081
+    TabOrder = 6
+  end
+  object RadioButton3: TRadioButton
+    Left = 325
+    Top = 356
+    Width = 113
+    Height = 17
+    Caption = #1055#1088#1072#1074#1099#1081
+    TabOrder = 7
   end
 end

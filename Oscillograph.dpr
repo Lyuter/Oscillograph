@@ -11,7 +11,7 @@ uses
   OscillographPlugin in 'OscillographPlugin.pas',
   OscillographGDIP in 'OscillographGDIP.pas',
   OscillographSettings in 'OscillographSettings.pas',
-  OscillographOptionsFrame in 'OscillographOptionsFrame.pas' {OOptionsFrame};
+  OscillographOptionsFrame in 'OscillographOptionsFrame.pas';
 
 {$IFNDEF DEBUG}
   {$SetPEFlags IMAGE_FILE_DEBUG_STRIPPED}
@@ -25,7 +25,7 @@ uses
 function AIMPPluginGetHeader(out Header: IAIMPPlugin): HRESULT; stdcall;
 begin
 {$IFDEF DEBUG}
-    ReportMemoryLeaksOnShutdown := True;
+  ReportMemoryLeaksOnShutdown := True;
 {$ENDIF}
   try
     Header := TOPlugin.Create;
