@@ -96,7 +96,13 @@ begin
 end;
 
 procedure TOPlugin.OnSettingsModified(Sender: TObject);
+var
+  AServiceOptions: IAIMPServiceOptionsDialog;
 begin
+  if Supports(CoreIntf, IAIMPServiceOptionsDialog, AServiceOptions)
+  then
+    AServiceOptions.FrameModified(OOptionsCore);
+
  try
   if Sender is TOOptionsFrame
   then
@@ -141,6 +147,8 @@ end;
                               TOVisualization
 (=========================================================================}
 procedure TOVisualization.Click(X, Y, Button: Integer);
+var
+  Seti: TOSettings;
 begin
  try
   ODrawer.Click(X, Y, Button);
@@ -187,19 +195,14 @@ end;
 
 function TOVisualization.Initialize(Width, Height: Integer): HRESULT;
 var
-  DefaultSettings: TOSettings;
+  Settings: TOSettings;
 begin
  try
   ODrawer := TOscillographGDIP.Create;
-  with DefaultSettings do
-    begin
-      AntiAliasing := True;
-      LineMode := 0;
-      ColorLine := OSC_COLOR_DEFAULT_LINE;
-      ColorGrid := OSC_COLOR_DEFAULT_MARK;
-      ColorBackground := OSC_COLOR_DEFAULT_BACK;
-    end;    
-  ODrawer.Initialize(DefaultSettings, Width, Height);
+  if not Succeeded(ReadActiveSettings(Settings))
+  then
+    Settings := GetDefaultSettings;
+  ODrawer.Initialize(Settings, Width, Height);
   Result := S_OK;
  except
   Result := E_UNEXPECTED;
@@ -256,12 +259,9 @@ procedure TOOptionsCore.Notification(ID: Integer);
 begin
   if OOptionsFrame <> nil then
     case ID of
-      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_LOCALIZATION: ;
-//        OOptionsFrame.ApplyLocalization;
-      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_LOAD: ;
-//        OOptionsFrame.ConfigLoad;
-      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_SAVE: ;
-//        OOptionsFrame.ConfigSave;
+      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_LOCALIZATION: OOptionsFrame.ApplyLocalization;
+      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_LOAD: OOptionsFrame.ConfigLoad;
+      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_SAVE: OOptionsFrame.ConfigSave;
     end;
 end;
 

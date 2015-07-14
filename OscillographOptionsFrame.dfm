@@ -16,27 +16,29 @@ object OOptionsFrame: TOOptionsFrame
   TextHeight = 13
   object CheckBoxAntiAliasing: TCheckBox
     Left = 312
-    Top = 224
-    Width = 151
+    Top = 220
+    Width = 145
     Height = 17
     Caption = #1057#1075#1083#1072#1078#1080#1074#1072#1085#1080#1077
+    Checked = True
+    State = cbChecked
     TabOrder = 0
     OnClick = CheckBoxAntiAliasingClick
   end
   object GroupBox1: TGroupBox
-    Left = 8
-    Top = 8
-    Width = 455
+    Left = 4
+    Top = 4
+    Width = 463
     Height = 194
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1094#1074#1077#1090#1072
     TabOrder = 1
     DesignSize = (
-      455
+      463
       194)
     object PaintBoxColorPicker: TPaintBox
       Left = 193
       Top = 14
-      Width = 252
+      Width = 260
       Height = 170
       Cursor = crCross
       Anchors = [akLeft, akTop, akRight, akBottom]
@@ -45,6 +47,7 @@ object OOptionsFrame: TOOptionsFrame
       OnMouseDown = PaintBoxColorPickerMouseDown
       OnMouseMove = PaintBoxColorPickerMouseMove
       OnPaint = PaintBoxColorPickerPaint
+      ExplicitWidth = 252
     end
     object LabelLine: TLabel
       Left = 28
@@ -146,24 +149,28 @@ object OOptionsFrame: TOOptionsFrame
   end
   object CheckBoxGrid: TCheckBox
     Left = 312
-    Top = 254
-    Width = 151
+    Top = 250
+    Width = 137
     Height = 17
     Caption = #1054#1090#1086#1073#1088#1072#1078#1072#1090#1100' '#1089#1077#1090#1082#1091
+    Checked = True
+    State = cbChecked
     TabOrder = 2
+    OnClick = CheckBoxGridClick
   end
   object GroupBox3: TGroupBox
-    Left = 8
-    Top = 208
-    Width = 289
-    Height = 215
+    Left = 4
+    Top = 204
+    Width = 293
+    Height = 218
     Caption = #1058#1077#1084#1099
     TabOrder = 3
+    Visible = False
     object ListBox1: TListBox
-      Left = 144
-      Top = 13
+      Left = 146
+      Top = 12
       Width = 136
-      Height = 188
+      Height = 196
       ItemHeight = 13
       TabOrder = 0
     end
@@ -209,38 +216,39 @@ object OOptionsFrame: TOOptionsFrame
       TabOrder = 5
     end
   end
-  object RadioGroup1: TRadioGroup
+  object GroupBox2: TGroupBox
     Left = 303
-    Top = 287
-    Width = 160
-    Height = 98
+    Top = 281
+    Width = 164
+    Height = 92
     Caption = #1050#1072#1085#1072#1083#1099
     TabOrder = 4
-  end
-  object RadioButton1: TRadioButton
-    Left = 325
-    Top = 310
-    Width = 113
-    Height = 17
-    Caption = #1054#1073#1072
-    Checked = True
-    TabOrder = 5
-    TabStop = True
-  end
-  object RadioButton2: TRadioButton
-    Left = 325
-    Top = 333
-    Width = 113
-    Height = 17
-    Caption = #1051#1077#1074#1099#1081
-    TabOrder = 6
-  end
-  object RadioButton3: TRadioButton
-    Left = 325
-    Top = 356
-    Width = 113
-    Height = 17
-    Caption = #1055#1088#1072#1074#1099#1081
-    TabOrder = 7
+    Visible = False
+    object RadioButton3: TRadioButton
+      Left = 31
+      Top = 64
+      Width = 113
+      Height = 17
+      Caption = #1055#1088#1072#1074#1099#1081
+      TabOrder = 0
+    end
+    object RadioButton2: TRadioButton
+      Left = 31
+      Top = 41
+      Width = 113
+      Height = 17
+      Caption = #1051#1077#1074#1099#1081
+      TabOrder = 1
+    end
+    object RadioButton1: TRadioButton
+      Left = 31
+      Top = 18
+      Width = 113
+      Height = 17
+      Caption = #1054#1073#1072
+      Checked = True
+      TabOrder = 2
+      TabStop = True
+    end
   end
 end

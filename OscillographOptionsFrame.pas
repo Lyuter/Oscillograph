@@ -31,11 +31,11 @@ type
     PaintBoxGrid: TPaintBox;
     PaintBoxBackground: TPaintBox;
     CheckBoxFastConfig: TCheckBox;
-    RadioGroup1: TRadioGroup;
-    RadioButton1: TRadioButton;
-    RadioButton2: TRadioButton;
-    RadioButton3: TRadioButton;
     Button1: TButton;
+    GroupBox2: TGroupBox;
+    RadioButton3: TRadioButton;
+    RadioButton2: TRadioButton;
+    RadioButton1: TRadioButton;
     procedure FormPaint(Sender: TObject);
     procedure PaintBoxColorPickerPaint(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -52,6 +52,7 @@ type
     procedure ColorEditEnter(Sender: TObject);
     procedure ColorEditExit(Sender: TObject);
     procedure CheckBoxAntiAliasingClick(Sender: TObject);
+    procedure CheckBoxGridClick(Sender: TObject);
   private
     FActiveSettings: TOSettings;
     FPaletteImage: TBitmap;
@@ -65,15 +66,21 @@ type
     procedure BackgroundColorWrite(NewColor: Cardinal);
     function AntiAliasingRead: Boolean;
     procedure AntiAliasingWrite(NewValue: Boolean);
+    function DrawGridRead: Boolean;
+    procedure DrawGridWrite(NewValue: Boolean);
     procedure MakePalete;
     procedure DoModified;
   public
     property LineColor: Cardinal read LineColorRead write LineColorWrite;
     property GridColor: Cardinal read GridColorRead write GridColorWrite;
     property BackgroundColor: Cardinal read BackgroundColorRead write BackgroundColorWrite;
-    property AntiAliasing: Boolean read AntiAliasingRead write AntiAliasingWrite;
     property OnModified: TNotifyEvent read FOnModified write FOnModified;
     property Settings: TOSettings read FActiveSettings write FActiveSettings;
+    property AntiAliasing: Boolean read AntiAliasingRead write AntiAliasingWrite;
+    property DrawGrid: Boolean read DrawGridRead write DrawGridWrite;
+    procedure ApplyLocalization;
+    procedure ConfigLoad;
+    procedure ConfigSave;
   end;
 
 implementation
@@ -127,7 +134,7 @@ end;
 {--------------------------------------------------------------------
 DrawGradient}
 procedure DrawGradient(ACanvas: TCanvas; Rect: TRect;
-          Horicontal: Boolean; Colors: array of TColor);
+          Horizontal: Boolean; Colors: array of TColor);
 type
    RGBArray = array[0..2] of Byte;
 var
@@ -142,7 +149,7 @@ begin
   mx := High(Colors);
    if mx > 0 then
    begin
-     if Horicontal then
+     if Horizontal then
        mass := Rect.Right - Rect.Left
      else
        mass := Rect.Bottom - Rect.Top;
@@ -173,7 +180,7 @@ begin
          for z := 0 to 3 do
            a[z] := Trunc(b[y][z] + ((b[y + 1][z] - b[y][z]) * Faktor));
          ACanvas.Pen.Color := RGB(a[0], a[1], a[2]);
-         if Horicontal then
+         if Horizontal then
          begin
            ACanvas.MoveTo(Rect.Left + Stelle, Rect.Top);
            ACanvas.LineTo(Rect.Left + Stelle, Rect.Bottom);
@@ -272,6 +279,19 @@ procedure TOOptionsFrame.AntiAliasingWrite(NewValue: Boolean);
 begin
   FActiveSettings.AntiAliasing := NewValue;
   CheckBoxAntiAliasing.Checked := NewValue;
+  DoModified;
+end;
+
+function TOOptionsFrame.DrawGridRead: Boolean;
+begin
+  Result := FActiveSettings.DrawGrid;
+end;
+
+procedure TOOptionsFrame.DrawGridWrite(NewValue: Boolean);
+begin
+  FActiveSettings.DrawGrid := NewValue;
+  CheckBoxGrid.Checked := NewValue;
+  DoModified;
 end;
 {--------------------------------------------------------------------}
 procedure TOOptionsFrame.FormCreate(Sender: TObject);
@@ -285,6 +305,7 @@ end;
 
 procedure TOOptionsFrame.FormDestroy(Sender: TObject);
 begin
+  ConfigLoad;
   FreeAndNil(FPaletteImage);
 end;
 {--------------------------------------------------------------------}
@@ -293,8 +314,7 @@ begin
   with Self.Canvas
   do
     begin
-      Brush.Color := $F0F0F0;
-      DrawFocusRect(Self.ClientRect);
+      DrawGradient(Self.Canvas, ClientRect, False,[$FeFeFe, $e3e3e3]);
     end;
 end;
 
@@ -326,9 +346,9 @@ begin
       then
         begin
           Color := PaintBoxColorPicker.Canvas.Pixels[X, Y];
-          LineColor := RGBColorize(OSC_COLOR_DEFAULT_LINE, Color);
-          GridColor := RGBColorize(OSC_COLOR_DEFAULT_MARK, Color);
-          BackgroundColor := RGBColorize(OSC_COLOR_DEFAULT_BACK, Color);
+          LineColor := RGBColorize(OSC_DEFAULT_COLOR_LINE, Color);
+          GridColor := RGBColorize(OSC_DEFAULT_COLOR_GRID, Color);
+          BackgroundColor := RGBColorize(OSC_DEFAULT_COLOR_BACK, Color);
         end;
       if FSelectedColorBox = PaintBoxLine
       then
@@ -356,17 +376,17 @@ end;
 procedure TOOptionsFrame.CheckBoxAntiAliasingClick(Sender: TObject);
 begin
   AntiAliasing := CheckBoxAntiAliasing.Checked;
-  DoModified;
 end;
 
 procedure TOOptionsFrame.CheckBoxFastConfigMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   CheckBoxFastConfig.Checked := True;
-  FSelectedColorBox := nil;
-  ColorBoxPaint(PaintBoxLine);
-  ColorBoxPaint(PaintBoxGrid);
-  ColorBoxPaint(PaintBoxBackground);
+end;
+
+procedure TOOptionsFrame.CheckBoxGridClick(Sender: TObject);
+begin
+  DrawGrid := CheckBoxGrid.Checked;
 end;
 
 procedure TOOptionsFrame.ColorBoxClick(Sender: TObject);
@@ -462,6 +482,7 @@ begin
       ColorBoxPaint(PaintBoxBackground);
     except
     end;
+  DoModified;
 end;
 
 procedure TOOptionsFrame.ColorEditEnter(Sender: TObject);
@@ -478,6 +499,7 @@ begin
   if Sender = EditBackground
   then
     FSelectedColorBox := PaintBoxBackground;
+
   CheckBoxFastConfig.Checked := False;
   ColorBoxPaint(PaintBoxLine);
   ColorBoxPaint(PaintBoxGrid);
@@ -489,15 +511,25 @@ begin
   if not (Sender is TEdit)
   then
     exit;
+  FSelectedColorBox := nil;
   if Sender = EditLine
   then
-    EditLine.Text := ColorToHtml(LineColor);
+    begin
+      EditLine.Text := ColorToHtml(LineColor);
+      ColorBoxPaint(PaintBoxLine);
+    end;
   if Sender = EditGrid
   then
-    EditGrid.Text := ColorToHtml(GridColor);
+    begin
+      EditGrid.Text := ColorToHtml(GridColor);
+      ColorBoxPaint(PaintBoxGrid);
+    end;
   if Sender = EditBackground
   then
-    EditBackground.Text := ColorToHtml(BackgroundColor);
+    begin
+      EditBackground.Text := ColorToHtml(BackgroundColor);
+      ColorBoxPaint(PaintBoxBackground);
+    end;
 end;
 
 procedure TOOptionsFrame.DoModified;
@@ -505,6 +537,31 @@ begin
   if Assigned(OnModified)
   then
     OnModified(Self);
+end;
+{--------------------------------------------------------------------}
+procedure TOOptionsFrame.ConfigLoad;
+var
+  NewSettings: TOSettings;
+begin
+  if Succeeded(ReadActiveSettings(NewSettings))
+  then
+    begin
+      LineColor := NewSettings.ColorLine;
+      GridColor := NewSettings.ColorGrid;
+      BackgroundColor := NewSettings.ColorBackground;
+      AntiAliasing := NewSettings.AntiAliasing;
+      DrawGrid := NewSettings.DrawGrid;
+    end;
+end;
+
+procedure TOOptionsFrame.ConfigSave;
+begin
+  WriteActiveSettings(FActiveSettings);
+end;
+{--------------------------------------------------------------------}
+procedure TOOptionsFrame.ApplyLocalization;
+begin
+  //
 end;
 {--------------------------------------------------------------------
 MakePalete}

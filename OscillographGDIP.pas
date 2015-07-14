@@ -44,12 +44,20 @@ begin
             (RGBColor and $000000FF) shl 16;
 end;
 {--------------------------------------------------------------------}
+procedure ConvertColors(out Settings: TOSettings);
+begin
+  Settings.ColorLine := RGBToARGB(Settings.ColorLine) or $FF000000;
+  Settings.ColorGrid := RGBToARGB(Settings.ColorGrid) or $32000000;
+  Settings.ColorBackground := RGBToARGB(Settings.ColorBackground) or $55000000;
+end;
+{--------------------------------------------------------------------}
 function TOscillographGDIP.Initialize(Settings: TOSettings; Width, Height: Integer): HRESULT;
 begin
   inherited;
  try
   Result := S_OK;
   FSettings := Settings;
+  ConvertColors(FSettings);
   FBrush := TGPSolidBrush.Create(Settings.ColorBackground);
   FPen := TGPPen.Create(Settings.ColorBackground);
   FClientRect.Top := 0;
@@ -89,9 +97,7 @@ end;
 procedure TOscillographGDIP.UpdateSettings(NewSettings: TOSettings);
 begin
   FSettings := NewSettings;
-  FSettings.ColorLine := RGBToARGB(NewSettings.ColorLine) or $FF000000;
-  FSettings.ColorGrid := RGBToARGB(NewSettings.ColorGrid) or $32000000;
-  FSettings.ColorBackground := RGBToARGB( NewSettings.ColorBackground) or $55000000;
+  ConvertColors(FSettings);
   MakeGrid;
 end;
 {--------------------------------------------------------------------}
