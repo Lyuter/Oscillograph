@@ -22,16 +22,16 @@ object OOptionsFrame: TOOptionsFrame
     Caption = #1057#1075#1083#1072#1078#1080#1074#1072#1085#1080#1077
     Checked = True
     State = cbChecked
-    TabOrder = 0
+    TabOrder = 2
     OnClick = CheckBoxAntiAliasingClick
   end
-  object GroupBox1: TGroupBox
+  object GroupBoxColor: TGroupBox
     Left = 4
     Top = 4
     Width = 463
     Height = 194
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1094#1074#1077#1090#1072
-    TabOrder = 1
+    TabOrder = 0
     DesignSize = (
       463
       194)
@@ -155,17 +155,16 @@ object OOptionsFrame: TOOptionsFrame
     Caption = #1054#1090#1086#1073#1088#1072#1078#1072#1090#1100' '#1089#1077#1090#1082#1091
     Checked = True
     State = cbChecked
-    TabOrder = 2
+    TabOrder = 3
     OnClick = CheckBoxGridClick
   end
-  object GroupBox3: TGroupBox
+  object GroupBoxPresets: TGroupBox
     Left = 4
     Top = 204
     Width = 293
     Height = 218
     Caption = #1058#1077#1084#1099
-    TabOrder = 3
-    Visible = False
+    TabOrder = 1
     object ListBox1: TListBox
       Left = 146
       Top = 12
@@ -216,14 +215,13 @@ object OOptionsFrame: TOOptionsFrame
       TabOrder = 5
     end
   end
-  object GroupBox2: TGroupBox
+  object GroupBoxChannels: TGroupBox
     Left = 303
-    Top = 281
+    Top = 273
     Width = 164
     Height = 92
     Caption = #1050#1072#1085#1072#1083#1099
     TabOrder = 4
-    Visible = False
     object RadioButton3: TRadioButton
       Left = 31
       Top = 64

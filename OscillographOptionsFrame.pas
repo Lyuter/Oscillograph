@@ -1,3 +1,11 @@
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+            Oscillograph - AIMP3 plugin
+                  Version: 2.0
+              Copyright (c) Lyuter
+           Mail : pro100lyuter@mail.ru
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
 unit OscillographOptionsFrame;
 
 interface
@@ -7,14 +15,14 @@ uses
   System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  OscillographSettings;
+  OscillographHelper;
 
 type
   TOOptionsFrame = class(TForm)
     CheckBoxAntiAliasing: TCheckBox;
-    GroupBox1: TGroupBox;
+    GroupBoxColor: TGroupBox;
     CheckBoxGrid: TCheckBox;
-    GroupBox3: TGroupBox;
+    GroupBoxPresets: TGroupBox;
     ListBox1: TListBox;
     Button2: TButton;
     Button3: TButton;
@@ -32,7 +40,7 @@ type
     PaintBoxBackground: TPaintBox;
     CheckBoxFastConfig: TCheckBox;
     Button1: TButton;
-    GroupBox2: TGroupBox;
+    GroupBoxChannels: TGroupBox;
     RadioButton3: TRadioButton;
     RadioButton2: TRadioButton;
     RadioButton1: TRadioButton;
@@ -330,22 +338,34 @@ procedure TOOptionsFrame.PaintBoxColorPickerMouseMove(Sender: TObject; Shift: TS
   X, Y: Integer);
 var
   Color: TColor;
+  DC: HDC;
+  CursorPos: TPoint;
 begin
   if ssLeft in Shift
   then
     begin
-      if  X < 0
-      then  X := 0;
-      if  Y < 0
-      then  Y := 0;
-      if  X > PaintBoxColorPicker.Width - 1
-      then  X := PaintBoxColorPicker.Width - 1;
-      if  Y > PaintBoxColorPicker.Height - 1
-      then  Y := PaintBoxColorPicker.Height - 1;
+//      if  X < 0
+//      then  X := 0;
+//      if  Y < 0
+//      then  Y := 0;
+//      if  X > PaintBoxColorPicker.Width - 1
+//      then  X := PaintBoxColorPicker.Width - 1;
+//      if  Y > PaintBoxColorPicker.Height - 1
+//      then  Y := PaintBoxColorPicker.Height - 1;
+      if PtInRect(PaintBoxColorPicker.ClientRect, Point(X, Y))
+      then
+        Color := PaintBoxColorPicker.Canvas.Pixels[X, Y]
+      else
+        begin
+          DC := GetDC(0);
+          GetCursorPos(CursorPos);
+          Color := GetPixel(DC, CursorPos.X, CursorPos.Y);
+          ReleaseDC(0, DC);
+        end;
+
       if CheckBoxFastConfig.Checked
       then
         begin
-          Color := PaintBoxColorPicker.Canvas.Pixels[X, Y];
           LineColor := RGBColorize(OSC_DEFAULT_COLOR_LINE, Color);
           GridColor := RGBColorize(OSC_DEFAULT_COLOR_GRID, Color);
           BackgroundColor := RGBColorize(OSC_DEFAULT_COLOR_BACK, Color);
@@ -353,17 +373,17 @@ begin
       if FSelectedColorBox = PaintBoxLine
       then
         begin
-          LineColor := PaintBoxColorPicker.Canvas.Pixels[X, Y];
+          LineColor := Color;
         end;
       if FSelectedColorBox = PaintBoxGrid
       then
         begin
-          GridColor := PaintBoxColorPicker.Canvas.Pixels[X, Y];
+          GridColor := Color;
         end;
       if FSelectedColorBox = PaintBoxBackground
       then
         begin
-          BackgroundColor := PaintBoxColorPicker.Canvas.Pixels[X, Y];
+          BackgroundColor := Color;
         end;
     end;
 end;
@@ -543,20 +563,19 @@ procedure TOOptionsFrame.ConfigLoad;
 var
   NewSettings: TOSettings;
 begin
-  if Succeeded(ReadActiveSettings(NewSettings))
+  if not Succeeded(ReadSettingsActive(NewSettings))
   then
-    begin
-      LineColor := NewSettings.ColorLine;
-      GridColor := NewSettings.ColorGrid;
-      BackgroundColor := NewSettings.ColorBackground;
-      AntiAliasing := NewSettings.AntiAliasing;
-      DrawGrid := NewSettings.DrawGrid;
-    end;
+    NewSettings := GetDefaultSettings;
+  LineColor := NewSettings.ColorLine;
+  GridColor := NewSettings.ColorGrid;
+  BackgroundColor := NewSettings.ColorBackground;
+  AntiAliasing := NewSettings.AntiAliasing;
+  DrawGrid := NewSettings.DrawGrid;
 end;
 
 procedure TOOptionsFrame.ConfigSave;
 begin
-  WriteActiveSettings(FActiveSettings);
+  WriteSettingsActive(FActiveSettings);
 end;
 {--------------------------------------------------------------------}
 procedure TOOptionsFrame.ApplyLocalization;

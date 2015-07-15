@@ -13,12 +13,12 @@ interface
 uses
   Windows, SysUtils, Classes,
   OscillographGDIP,
-  OscillographSettings,
+  OscillographHelper,
   OscillographOptionsFrame,
   AIMPCustomPlugin,
   apiWrappers, apiVisuals, apiCore,
   apiObjects, apiPlugin, apiMessages,
-  apiOptions;
+  apiOptions, apiSkins;
 
 type
   TOVisualization = class(TInterfacedObject, IAIMPExtensionEmbeddedVisualization)
@@ -63,18 +63,6 @@ type
 
 implementation
 
-{--------------------------------------------------------------------}
-procedure ShowErrorMessage(ErrorMessage: String);
-var
-  DLLName: array[0..MAX_PATH - 1] of Char;
-  FullMessage: String;
-begin
-  FillChar(DLLName, MAX_PATH, #0);
-  GetModuleFileName(HInstance, DLLName, MAX_PATH);
-  FullMessage := 'Exception in module "' + DLLName + '".'#13#13 + ErrorMessage;
-  MessageBox(0, PChar(FullMessage), OSCILLOGRAPH_CAPTION, MB_ICONERROR);
-end;
-
 {=========================================================================)
                                  TPlugin
 (=========================================================================}
@@ -99,22 +87,22 @@ procedure TOPlugin.OnSettingsModified(Sender: TObject);
 var
   AServiceOptions: IAIMPServiceOptionsDialog;
 begin
+ try
   if Supports(CoreIntf, IAIMPServiceOptionsDialog, AServiceOptions)
   then
     AServiceOptions.FrameModified(OOptionsCore);
-
- try
   if Sender is TOOptionsFrame
   then
     OVisualization.UpdateSettings(TOOptionsFrame(Sender).Settings);
  except
-  ShowErrorMessage('"SettingsModified" failure!');
+  ShowErrorMessage('"Plugin.OnSettingsModified" failure!');
  end;
 end;
 {--------------------------------------------------------------------
 Initialize}
 function TOPlugin.Initialize(Core: IAIMPCore): HRESULT;
 begin
+ try
   Result := inherited Initialize(Core);
   if Succeeded(Result)
   then
@@ -129,6 +117,10 @@ begin
       OOptionsCore.OnModified := OnSettingsModified;
       Result := Core.RegisterExtension(IID_IAIMPServiceOptionsDialog, OOptionsCore);
     end;
+ except
+  Result := E_UNEXPECTED;
+  ShowErrorMessage('"Plugin.Initialize" failure!');
+ end;
 end;
 {--------------------------------------------------------------------
 Finalize}
@@ -147,13 +139,19 @@ end;
                               TOVisualization
 (=========================================================================}
 procedure TOVisualization.Click(X, Y, Button: Integer);
-var
-  Seti: TOSettings;
+//var
+//  Skin: IAIMPServiceSkinsManager;
+//  SkinProperty: IAIMPPropertyList;
+//  Name: IAIMPString;
 begin
  try
   ODrawer.Click(X, Y, Button);
+//  CheckResult(CoreIntf.QueryInterface(IID_IAIMPServiceSkinsManager, Skin));
+//  CheckResult(Skin.QueryInterface(IID_IAIMPPropertyList, SkinProperty));
+//  CheckResult(SkinProperty.GetValueAsObject(AIMP_SERVICE_SKINSMAN_PROPID_SKIN, IID_IAIMPString, Name));
+//  ShowErrorMessage('"'+IAIMPStringToString(Name)+'"');
  except
-  ShowErrorMessage('"Visualization.Finalize" failure!');
+  ShowErrorMessage('"Visualization.Click" failure!');
  end;
 end;
 
@@ -172,7 +170,7 @@ begin
   Result := AIMP_VISUAL_FLAGS_RQD_DATA_WAVE;
  except
   Result := 0;
-  ShowErrorMessage('Drawer.GetFlags');
+  ShowErrorMessage('"Visualization.GetFlags" failure!');
  end;
 end;
 
@@ -199,29 +197,46 @@ var
 begin
  try
   ODrawer := TOscillographGDIP.Create;
-  if not Succeeded(ReadActiveSettings(Settings))
+  if not Succeeded(ReadSettingsActive(Settings))
   then
     Settings := GetDefaultSettings;
   ODrawer.Initialize(Settings, Width, Height);
   Result := S_OK;
  except
   Result := E_UNEXPECTED;
+  ShowErrorMessage('"Visualization.Initialize" failure!');
  end;
 end;
 
 procedure TOVisualization.Resize(NewWidth, NewHeight: Integer);
 begin
-  ODrawer.Resize(NewWidth, NewHeight);
+ try
+  if ODrawer <> nil
+  then
+    ODrawer.Resize(NewWidth, NewHeight);
+ except
+  ShowErrorMessage('"Visualization.Resize" failure!');
+ end;
 end;
 
 procedure TOVisualization.UpdateSettings(NewSettings: TOSettings);
 begin
-  ODrawer.UpdateSettings(NewSettings);
+ try
+  if ODrawer <> nil
+  then
+    ODrawer.UpdateSettings(NewSettings);
+ except
+  ShowErrorMessage('"Visualization.UpdateSettings" failure!');
+ end;
 end;
 
 procedure TOVisualization.Draw(DC: HDC; Data: PAIMPVisualData);
 begin
+ try
   ODrawer.Draw(DC, Data);
+ except
+  TextOut(DC, 0, 0, '"Visualization.Draw" failure!', Length('Draw failure!'));
+ end;
 end;
 
 {=========================================================================)
@@ -259,9 +274,12 @@ procedure TOOptionsCore.Notification(ID: Integer);
 begin
   if OOptionsFrame <> nil then
     case ID of
-      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_LOCALIZATION: OOptionsFrame.ApplyLocalization;
-      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_LOAD: OOptionsFrame.ConfigLoad;
-      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_SAVE: OOptionsFrame.ConfigSave;
+      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_LOCALIZATION:
+                                            OOptionsFrame.ApplyLocalization;
+      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_LOAD:
+                                            OOptionsFrame.ConfigLoad;
+      AIMP_SERVICE_OPTIONSDIALOG_NOTIFICATION_SAVE:
+                                            OOptionsFrame.ConfigSave;
     end;
 end;
 

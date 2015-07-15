@@ -1,10 +1,18 @@
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+            Oscillograph - AIMP3 plugin
+                  Version: 2.0
+              Copyright (c) Lyuter
+           Mail : pro100lyuter@mail.ru
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
 unit OscillographGDIP;
 
 interface
 
 uses
   Windows, SysUtils, apiVisuals, GdiPlus, VCL.Graphics, Math,
-  OscillographSettings;
+  OscillographHelper;
 
 type
 
