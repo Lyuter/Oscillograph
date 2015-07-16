@@ -143,6 +143,8 @@ procedure TOVisualization.Click(X, Y, Button: Integer);
 //  Skin: IAIMPServiceSkinsManager;
 //  SkinProperty: IAIMPPropertyList;
 //  Name: IAIMPString;
+var
+  SP: TOPresetList;
 begin
  try
   ODrawer.Click(X, Y, Button);
@@ -197,7 +199,7 @@ var
 begin
  try
   ODrawer := TOscillographGDIP.Create;
-  if not Succeeded(ReadSettingsActive(Settings))
+  if not Succeeded(ReadPresetActive(Settings))
   then
     Settings := GetDefaultSettings;
   ODrawer.Initialize(Settings, Width, Height);
@@ -235,7 +237,7 @@ begin
  try
   ODrawer.Draw(DC, Data);
  except
-  TextOut(DC, 0, 0, '"Visualization.Draw" failure!', Length('Draw failure!'));
+  TextOut(DC, 0, 0, 'Draw failure!', Length('Draw failure!'));
  end;
 end;
 

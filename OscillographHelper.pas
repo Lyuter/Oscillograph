@@ -50,7 +50,7 @@ type
     ColorBackground   : Cardinal;
   end;
 
-  TOSettingsList = array of TOSettings;
+  TOPresetList = array of TOSettings;
 
   IOscillographDrawer = interface(IUnknown)
   ['{0E6815FA-BC17-47AC-95A2-2F42DE84EB3D}']
@@ -65,18 +65,20 @@ type
   procedure ShowErrorMessage(ErrorMessage: String);
 
   function GetDefaultSettings: TOSettings;
-  function DeleteSettingsByIndex(Index: Integer): HRESULT;
+  function DeletePresetByIndex(Index: Integer): HRESULT;
 
-  function ReadSettings(KeyPath: String; out Settings: TOSettings): HRESULT;
-  function ReadSettingsActive(out ActiveSettings: TOSettings): HRESULT;
-  function ReadSettingsByIndex(Index: Integer; out Settings: TOSettings): HRESULT;
+  function ReadPreset(KeyPath: String; out Settings: TOSettings): HRESULT;
+  function ReadPresetActive(out ActiveSettings: TOSettings): HRESULT;
+  function ReadPresetByIndex(Index: Integer; out Settings: TOSettings): HRESULT;
+  function ReadPresetCount(out Count: Integer): HRESULT;
 
-  function WriteSettings(KeyPath: String; Settings: TOSettings): HRESULT;
-  function WriteSettingsActive(ActiveSettings: TOSettings): HRESULT;
-  function WriteSettingsByIndex(Index: Integer; Settings: TOSettings): HRESULT;
+  function WritePreset(KeyPath: String; Settings: TOSettings): HRESULT;
+  function WritePresetActive(ActiveSettings: TOSettings): HRESULT;
+  function WritePresetByIndex(Index: Integer; Settings: TOSettings): HRESULT;
+  function WritePresetCount(Count: Integer): HRESULT;
 
-  function ReadSettingsCount(out Count: Integer): HRESULT;
-  function WriteSettingsCount(Count: Integer): HRESULT;
+  function ReadPresetList(out PresetList: TOPresetList): HRESULT;
+  function WritePresetList(PresetList: TOPresetList): HRESULT;
 
 implementation
 
@@ -156,7 +158,7 @@ begin
     end;
 end;
 {--------------------------------------------------------------------}
-function ReadSettings(KeyPath: String; out Settings: TOSettings): HRESULT;
+function ReadPreset(KeyPath: String; out Settings: TOSettings): HRESULT;
 var
   ServiceConfig: IAIMPServiceConfig;
   ConfigString: IAIMPString;
@@ -174,17 +176,17 @@ begin
  end;
 end;
 {--------------------------------------------------------------------}
-function ReadSettingsActive(out ActiveSettings: TOSettings): HRESULT;
+function ReadPresetActive(out ActiveSettings: TOSettings): HRESULT;
 begin
-  Result := ReadSettings(OSC_CONFIG_KEYPATH_ACTIVE, ActiveSettings);
+  Result := ReadPreset(OSC_CONFIG_KEYPATH_ACTIVE, ActiveSettings);
 end;
 {--------------------------------------------------------------------}
-function ReadSettingsByIndex(Index: Integer; out Settings: TOSettings): HRESULT;
+function ReadPresetByIndex(Index: Integer; out Settings: TOSettings): HRESULT;
 begin
-  Result := ReadSettings(OSC_CONFIG_KEYPATH_PRESET + IntToStr(Index), Settings);
+  Result := ReadPreset(OSC_CONFIG_KEYPATH_PRESET + IntToStr(Index), Settings);
 end;
 {--------------------------------------------------------------------}
-function WriteSettings(KeyPath: String; Settings: TOSettings): HRESULT;
+function WritePreset(KeyPath: String; Settings: TOSettings): HRESULT;
 var
   ServiceConfig: IAIMPServiceConfig;
 begin
@@ -199,17 +201,17 @@ begin
  end;
 end;
 {--------------------------------------------------------------------}
-function WriteSettingsActive(ActiveSettings: TOSettings): HRESULT;
+function WritePresetActive(ActiveSettings: TOSettings): HRESULT;
 begin
-  Result := WriteSettings(OSC_CONFIG_KEYPATH_ACTIVE, ActiveSettings);
+  Result := WritePreset(OSC_CONFIG_KEYPATH_ACTIVE, ActiveSettings);
 end;
 {--------------------------------------------------------------------}
-function WriteSettingsByIndex(Index: Integer; Settings: TOSettings): HRESULT;
+function WritePresetByIndex(Index: Integer; Settings: TOSettings): HRESULT;
 begin
-  Result := WriteSettings(OSC_CONFIG_KEYPATH_PRESET + IntToStr(Index), Settings);
+  Result := WritePreset(OSC_CONFIG_KEYPATH_PRESET + IntToStr(Index), Settings);
 end;
 {--------------------------------------------------------------------}
-function ReadSettingsCount(out Count: Integer): HRESULT;
+function ReadPresetCount(out Count: Integer): HRESULT;
 var
   ServiceConfig: IAIMPServiceConfig;
 begin
@@ -223,10 +225,9 @@ begin
  except
   Result := E_UNEXPECTED;
  end;
-
 end;
 {--------------------------------------------------------------------}
-function WriteSettingsCount(Count: Integer): HRESULT;
+function WritePresetCount(Count: Integer): HRESULT;
 var
   ServiceConfig: IAIMPServiceConfig;
 begin
@@ -242,7 +243,7 @@ begin
  end;
 end;
 {--------------------------------------------------------------------}
-function DeleteSettingsByIndex(Index: Integer): HRESULT;
+function DeletePresetByIndex(Index: Integer): HRESULT;
 var
   ServiceConfig: IAIMPServiceConfig;
 begin
@@ -252,6 +253,68 @@ begin
   then
     Result := ServiceConfig.Delete(
                       MakeString(OSC_CONFIG_KEYPATH_PRESET + IntToStr(Index)));
+ except
+  Result := E_UNEXPECTED;
+ end;
+end;
+{--------------------------------------------------------------------}
+function ReadPresetList(out PresetList: TOPresetList): HRESULT;
+var
+  i, PresetCount, PresetListLength: Integer;
+  Settings: TOSettings;
+begin
+ try
+  Result := ReadPresetCount(PresetCount);
+  case  Result of
+      S_OK: ;
+      E_FAIL: begin
+                SetLength(PresetList, 0);
+                Result := S_OK;
+                exit;
+              end;
+      else  exit;
+  end;
+  if (PresetCount < 0)
+  then
+    begin
+      SetLength(PresetList, 0);
+      Result := S_OK;
+      exit;
+    end;
+  PresetListLength := 0;
+  SetLength(PresetList, 0);
+  for i := 0 to PresetCount - 1
+  do
+    if Succeeded(ReadPresetByIndex(i, Settings))
+    then
+      begin
+        Inc(PresetListLength);
+        SetLength(PresetList, PresetListLength);
+        PresetList[PresetListLength - 1] := Settings;
+      end;
+  Result := S_OK;
+ except
+  Result := E_UNEXPECTED;
+ end;
+end;
+{--------------------------------------------------------------------}
+function WritePresetList(PresetList: TOPresetList): HRESULT;
+var
+  i, OldPresetCount, PresetListLength: Integer;
+begin
+ try
+  if not Succeeded(ReadPresetCount(OldPresetCount))
+  then
+    OldPresetCount := 0;
+  PresetListLength := Length(PresetList);
+  if OldPresetCount > PresetListLength
+  then
+    for i := PresetListLength to OldPresetCount - 1
+    do DeletePresetByIndex(i);
+  for i := 0 to PresetListLength - 1
+  do
+    WritePresetByIndex(i, PresetList[i]);
+  WritePresetCount(PresetListLength);
  except
   Result := E_UNEXPECTED;
  end;

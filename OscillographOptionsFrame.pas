@@ -23,7 +23,7 @@ type
     GroupBoxColor: TGroupBox;
     CheckBoxGrid: TCheckBox;
     GroupBoxPresets: TGroupBox;
-    ListBox1: TListBox;
+    ListBoxPresetList: TListBox;
     Button2: TButton;
     Button3: TButton;
     Button4: TButton;
@@ -61,8 +61,11 @@ type
     procedure ColorEditExit(Sender: TObject);
     procedure CheckBoxAntiAliasingClick(Sender: TObject);
     procedure CheckBoxGridClick(Sender: TObject);
+    procedure ListBoxPresetListDrawItem(Control: TWinControl; Index: Integer;
+      Rect: TRect; State: TOwnerDrawState);
   private
     FActiveSettings: TOSettings;
+    FPresetList: TOPresetList;
     FPaletteImage: TBitmap;
     FSelectedColorBox: TPaintBox;
     FOnModified: TNotifyEvent;
@@ -78,6 +81,7 @@ type
     procedure DrawGridWrite(NewValue: Boolean);
     procedure MakePalete;
     procedure DoModified;
+//    property PresetList: TOPresetList read FPresetList write FPresetList;
   public
     property LineColor: Cardinal read LineColorRead write LineColorWrite;
     property GridColor: Cardinal read GridColorRead write GridColorWrite;
@@ -252,6 +256,62 @@ begin
   FActiveSettings.ColorLine := NewColor;
   EditLine.Text := ColorToHtml(NewColor);
   DoModified;
+end;
+
+procedure TOOptionsFrame.ListBoxPresetListDrawItem(Control: TWinControl;
+  Index: Integer; Rect: TRect; State: TOwnerDrawState);
+var
+  PaintRect: TRect;
+  RectWidth: Integer;
+begin
+ try
+    with (Control as TListBox).Canvas do
+      begin
+        Brush.Color := clWindow;
+        FillRect(Rect);
+//        TextOut(Rect.Left + 2, Rect.Top, IntToStr(Index + 1));
+
+        PaintRect :=  Rect;
+        PaintRect.Top := Rect.Top + 2;
+        PaintRect.Bottom := Rect.Bottom - 2;
+        PaintRect.Left := Rect.Left + 2;
+        PaintRect.Right := Rect.Right - 2;
+
+        RectWidth := Round((PaintRect.Width-40)/3);
+
+        PaintRect.Left  := PaintRect.Left + 20;
+        PaintRect.Right := PaintRect.Left + RectWidth;
+        Brush.Color := Random(clWhite);
+        FillRect(PaintRect);
+
+        PaintRect.Left := PaintRect.Left + RectWidth;
+        PaintRect.Right := PaintRect.Left + RectWidth;
+        Brush.Color := Random(clWhite);
+        FillRect(PaintRect);
+
+        PaintRect.Left := PaintRect.Left + RectWidth;
+        PaintRect.Right := PaintRect.Left + RectWidth;
+        Brush.Color := Random(clWhite);
+        FillRect(PaintRect);
+
+        if (odSelected in State)
+        then
+          begin
+//            Brush.Color := clWindow;
+            Brush.Style := bsClear;
+            Pen.Color := clHighlight;
+//            Pen.Mode := pmMaskPenNot;
+            Pen.Style := psSolid;
+            Rectangle(Rect);
+//            FillRect(Rect);
+//            Textout(Rect.Left + 2, Rect.Top, IntToStr(Index + 1));
+          end;
+        if odFocused in State
+        then
+          DrawFocusRect(Rect);
+      end;
+ except
+ end;
 end;
 
 function TOOptionsFrame.GridColorRead: Cardinal;
@@ -563,19 +623,27 @@ procedure TOOptionsFrame.ConfigLoad;
 var
   NewSettings: TOSettings;
 begin
-  if not Succeeded(ReadSettingsActive(NewSettings))
+ try
+  if not Succeeded(ReadPresetActive(NewSettings))
   then
     NewSettings := GetDefaultSettings;
+  if not Succeeded(ReadPresetList(FPresetList))
+  then
+    SetLength(FPresetList, 0);
   LineColor := NewSettings.ColorLine;
   GridColor := NewSettings.ColorGrid;
   BackgroundColor := NewSettings.ColorBackground;
   AntiAliasing := NewSettings.AntiAliasing;
   DrawGrid := NewSettings.DrawGrid;
+ except
+  ShowErrorMessage('"OptionsFrame.ConfigLoad" failure!');
+ end;
 end;
 
 procedure TOOptionsFrame.ConfigSave;
 begin
-  WriteSettingsActive(FActiveSettings);
+  WritePresetList(FPresetList);
+  WritePresetActive(FActiveSettings);
 end;
 {--------------------------------------------------------------------}
 procedure TOOptionsFrame.ApplyLocalization;

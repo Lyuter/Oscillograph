@@ -165,13 +165,20 @@ object OOptionsFrame: TOOptionsFrame
     Height = 218
     Caption = #1058#1077#1084#1099
     TabOrder = 1
-    object ListBox1: TListBox
-      Left = 146
-      Top = 12
-      Width = 136
-      Height = 196
+    object ListBoxPresetList: TListBox
+      Left = 160
+      Top = 16
+      Width = 122
+      Height = 192
+      Style = lbOwnerDrawFixed
       ItemHeight = 13
+      Items.Strings = (
+        '1'
+        '2'
+        '3'
+        '4')
       TabOrder = 0
+      OnDrawItem = ListBoxPresetListDrawItem
     end
     object Button2: TButton
       Left = 14
