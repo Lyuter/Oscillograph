@@ -24,9 +24,9 @@ type
     CheckBoxGrid: TCheckBox;
     GroupBoxPresets: TGroupBox;
     ListBoxPresetList: TListBox;
-    Button2: TButton;
-    Button3: TButton;
-    Button4: TButton;
+    ButtonPresetAdd: TButton;
+    ButtonPresetSave: TButton;
+    ButtonPresetDelete: TButton;
     CheckBox3: TCheckBox;
     PaintBoxColorPicker: TPaintBox;
     EditLine: TEdit;
@@ -39,11 +39,11 @@ type
     PaintBoxGrid: TPaintBox;
     PaintBoxBackground: TPaintBox;
     CheckBoxFastConfig: TCheckBox;
-    Button1: TButton;
     GroupBoxChannels: TGroupBox;
     RadioButton3: TRadioButton;
     RadioButton2: TRadioButton;
     RadioButton1: TRadioButton;
+    Button1: TButton;
     procedure FormPaint(Sender: TObject);
     procedure PaintBoxColorPickerPaint(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -63,6 +63,10 @@ type
     procedure CheckBoxGridClick(Sender: TObject);
     procedure ListBoxPresetListDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
+    procedure ButtonPresetAddClick(Sender: TObject);
+    procedure ButtonPresetSaveClick(Sender: TObject);
+    procedure ListBoxPresetListDblClick(Sender: TObject);
+    procedure ButtonPresetDeleteClick(Sender: TObject);
   private
     FActiveSettings: TOSettings;
     FPresetList: TOPresetList;
@@ -82,6 +86,11 @@ type
     procedure MakePalete;
     procedure DoModified;
 //    property PresetList: TOPresetList read FPresetList write FPresetList;
+    procedure PresetAdd(NewPreset: TOSettings);
+    procedure PresetDelete(Index: Integer);
+    procedure PresetUpdate(NewPreset: TOSettings; Index: Integer);
+    procedure PresetsLoad;
+    procedure PresetsSave;
   public
     property LineColor: Cardinal read LineColorRead write LineColorWrite;
     property GridColor: Cardinal read GridColorRead write GridColorWrite;
@@ -258,6 +267,18 @@ begin
   DoModified;
 end;
 
+procedure TOOptionsFrame.ListBoxPresetListDblClick(Sender: TObject);
+begin
+  if ListBoxPresetList.ItemIndex < 0
+  then
+    exit;
+  LineColor := FPresetList[ListBoxPresetList.ItemIndex].ColorLine;
+  GridColor := FPresetList[ListBoxPresetList.ItemIndex].ColorGrid;
+  BackgroundColor := FPresetList[ListBoxPresetList.ItemIndex].ColorBackground;
+  AntiAliasing := FPresetList[ListBoxPresetList.ItemIndex].AntiAliasing;
+  DrawGrid := FPresetList[ListBoxPresetList.ItemIndex].DrawGrid;
+end;
+
 procedure TOOptionsFrame.ListBoxPresetListDrawItem(Control: TWinControl;
   Index: Integer; Rect: TRect; State: TOwnerDrawState);
 var
@@ -267,48 +288,55 @@ begin
  try
     with (Control as TListBox).Canvas do
       begin
-        Brush.Color := clWindow;
-        FillRect(Rect);
-//        TextOut(Rect.Left + 2, Rect.Top, IntToStr(Index + 1));
-
-        PaintRect :=  Rect;
+        if (odSelected in State)
+        then
+          begin
+            Brush.Color := clHighlight;
+//            Brush.Style := bsClear;
+//            Pen.Color := clHighlight;
+//            Pen.Mode := pmMask;
+////            Pen.Style := psSolid;
+//            Rectangle(Rect);
+            FillRect(Rect);
+          end
+        else
+          begin
+            Brush.Color := clWindow;
+            FillRect(Rect);
+          end;
         PaintRect.Top := Rect.Top + 2;
         PaintRect.Bottom := Rect.Bottom - 2;
         PaintRect.Left := Rect.Left + 2;
         PaintRect.Right := Rect.Right - 2;
 
-        RectWidth := Round((PaintRect.Width-40)/3);
+        RectWidth := Round((PaintRect.Width-8)/3);
 
-        PaintRect.Left  := PaintRect.Left + 20;
+        PaintRect.Left  := PaintRect.Left + 4;
         PaintRect.Right := PaintRect.Left + RectWidth;
-        Brush.Color := Random(clWhite);
+        Brush.Color := FPresetList[Index].ColorLine;
         FillRect(PaintRect);
 
         PaintRect.Left := PaintRect.Left + RectWidth;
         PaintRect.Right := PaintRect.Left + RectWidth;
-        Brush.Color := Random(clWhite);
+        Brush.Color := FPresetList[Index].ColorGrid;
         FillRect(PaintRect);
 
         PaintRect.Left := PaintRect.Left + RectWidth;
         PaintRect.Right := PaintRect.Left + RectWidth;
-        Brush.Color := Random(clWhite);
+        Brush.Color := FPresetList[Index].ColorBackground;
         FillRect(PaintRect);
 
-        if (odSelected in State)
+
+        if (odFocused in State)
         then
           begin
-//            Brush.Color := clWindow;
-            Brush.Style := bsClear;
+//            Brush.Color := clHighlight;
             Pen.Color := clHighlight;
-//            Pen.Mode := pmMaskPenNot;
-            Pen.Style := psSolid;
-            Rectangle(Rect);
-//            FillRect(Rect);
-//            Textout(Rect.Left + 2, Rect.Top, IntToStr(Index + 1));
+//            DrawFocusRect(Rect);
+//            DrawFocusRect(Rect);
+//            DrawFocusRect(Rect);
           end;
-        if odFocused in State
-        then
-          DrawFocusRect(Rect);
+
       end;
  except
  end;
@@ -336,6 +364,25 @@ begin
   FActiveSettings.ColorBackground := NewColor;
   EditBackground.Text := ColorToHtml(NewColor);
   DoModified;
+end;
+
+procedure TOOptionsFrame.ButtonPresetAddClick(Sender: TObject);
+begin
+  PresetAdd(FActiveSettings);
+end;
+
+procedure TOOptionsFrame.ButtonPresetSaveClick(Sender: TObject);
+begin
+  if ListBoxPresetList.ItemIndex > -1
+  then
+    PresetUpdate(FActiveSettings, ListBoxPresetList.ItemIndex);
+end;
+
+procedure TOOptionsFrame.ButtonPresetDeleteClick(Sender: TObject);
+begin
+  if ListBoxPresetList.ItemIndex > -1
+  then
+    PresetDelete(ListBoxPresetList.ItemIndex);
 end;
 
 function TOOptionsFrame.AntiAliasingRead: Boolean;
@@ -627,9 +674,7 @@ begin
   if not Succeeded(ReadPresetActive(NewSettings))
   then
     NewSettings := GetDefaultSettings;
-  if not Succeeded(ReadPresetList(FPresetList))
-  then
-    SetLength(FPresetList, 0);
+  PresetsLoad;
   LineColor := NewSettings.ColorLine;
   GridColor := NewSettings.ColorGrid;
   BackgroundColor := NewSettings.ColorBackground;
@@ -642,13 +687,68 @@ end;
 
 procedure TOOptionsFrame.ConfigSave;
 begin
-  WritePresetList(FPresetList);
+  PresetsSave;
   WritePresetActive(FActiveSettings);
 end;
 {--------------------------------------------------------------------}
 procedure TOOptionsFrame.ApplyLocalization;
 begin
   //
+end;
+{--------------------------------------------------------------------}
+procedure TOOptionsFrame.PresetAdd(NewPreset: TOSettings);
+var
+  Count: Integer;
+begin
+  Count := Length(FPresetList);
+  SetLength(FPresetList, Count + 1);
+  FPresetList[Count] := NewPreset;
+  ListBoxPresetList.Count := Count + 1;
+  DoModified;
+end;
+
+procedure TOOptionsFrame.PresetDelete(Index: Integer);
+var
+  PresetLength, i: Integer;
+begin
+ try
+  PresetLength := Length(FPresetList);
+  for i := Index to PresetLength - 2
+  do
+    FPresetList[i] := FPresetList[i + 1];
+  SetLength(FPresetList, PresetLength - 1);
+  ListBoxPresetList.Count := PresetLength - 1;
+  if Index < PresetLength - 1
+  then
+    ListBoxPresetList.ItemIndex := Index;
+  DoModified;
+ except
+  ShowErrorMessage('"OptionsFrame.PresetDelete" failure!');
+ end;
+end;
+
+procedure TOOptionsFrame.PresetUpdate(NewPreset: TOSettings; Index: Integer);
+begin
+ try
+  FPresetList[Index] := NewPreset;
+  ListBoxPresetList.Refresh;
+  DoModified;
+ except
+  ShowErrorMessage('"OptionsFrame.PresetUpdate" failure!');
+ end;
+end;
+
+procedure TOOptionsFrame.PresetsLoad;
+begin
+  if not Succeeded(ReadPresetList(FPresetList))
+  then
+    SetLength(FPresetList, 0);
+  ListBoxPresetList.Count := Length(FPresetList);
+end;
+
+procedure TOOptionsFrame.PresetsSave;
+begin
+  WritePresetList(FPresetList);
 end;
 {--------------------------------------------------------------------
 MakePalete}

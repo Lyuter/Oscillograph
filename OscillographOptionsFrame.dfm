@@ -138,13 +138,21 @@ object OOptionsFrame: TOOptionsFrame
       OnExit = ColorEditExit
     end
     object CheckBoxFastConfig: TCheckBox
-      Left = 28
-      Top = 144
+      Left = 30
+      Top = 120
       Width = 157
       Height = 17
       Caption = #1041#1099#1089#1090#1088#1072#1103' '#1085#1072#1089#1090#1088#1086#1081#1082#1072
       TabOrder = 3
       OnMouseUp = CheckBoxFastConfigMouseUp
+    end
+    object Button1: TButton
+      Left = 14
+      Top = 159
+      Width = 113
+      Height = 25
+      Caption = #1057#1073#1088#1086#1089
+      TabOrder = 4
     end
   end
   object CheckBoxGrid: TCheckBox
@@ -170,39 +178,38 @@ object OOptionsFrame: TOOptionsFrame
       Top = 16
       Width = 122
       Height = 192
-      Style = lbOwnerDrawFixed
+      Style = lbVirtualOwnerDraw
       ItemHeight = 13
-      Items.Strings = (
-        '1'
-        '2'
-        '3'
-        '4')
       TabOrder = 0
+      OnDblClick = ListBoxPresetListDblClick
       OnDrawItem = ListBoxPresetListDrawItem
     end
-    object Button2: TButton
+    object ButtonPresetAdd: TButton
       Left = 14
       Top = 27
       Width = 113
       Height = 25
       Caption = #1044#1086#1073#1072#1074#1080#1090#1100
       TabOrder = 1
+      OnClick = ButtonPresetAddClick
     end
-    object Button3: TButton
+    object ButtonPresetSave: TButton
       Left = 14
       Top = 58
       Width = 113
       Height = 25
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
       TabOrder = 2
+      OnClick = ButtonPresetSaveClick
     end
-    object Button4: TButton
+    object ButtonPresetDelete: TButton
       Left = 14
       Top = 89
       Width = 113
       Height = 25
       Caption = #1059#1076#1072#1083#1080#1090#1100
       TabOrder = 3
+      OnClick = ButtonPresetDeleteClick
     end
     object CheckBox3: TCheckBox
       Left = 14
@@ -212,14 +219,6 @@ object OOptionsFrame: TOOptionsFrame
       Caption = #1055#1088#1080#1074#1103#1079#1072#1090#1100' '#1082' '#1072#1082#1090#1080#1074#1085#1086#1084#1091' '#1089#1082#1080#1085#1091
       TabOrder = 4
       WordWrap = True
-    end
-    object Button1: TButton
-      Left = 14
-      Top = 120
-      Width = 113
-      Height = 25
-      Caption = #1053#1086#1074#1099#1081
-      TabOrder = 5
     end
   end
   object GroupBoxChannels: TGroupBox

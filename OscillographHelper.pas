@@ -315,6 +315,7 @@ begin
   do
     WritePresetByIndex(i, PresetList[i]);
   WritePresetCount(PresetListLength);
+  Result := S_OK;
  except
   Result := E_UNEXPECTED;
  end;

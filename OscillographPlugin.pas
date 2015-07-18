@@ -143,8 +143,6 @@ procedure TOVisualization.Click(X, Y, Button: Integer);
 //  Skin: IAIMPServiceSkinsManager;
 //  SkinProperty: IAIMPPropertyList;
 //  Name: IAIMPString;
-var
-  SP: TOPresetList;
 begin
  try
   ODrawer.Click(X, Y, Button);
